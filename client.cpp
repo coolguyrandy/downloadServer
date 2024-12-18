@@ -77,7 +77,7 @@ int fileWrite(int readFd, int writeFd, int readFileSize, size_t bufSize){
 	int bytesWritten = 0;
 	int bytesLeft = readFileSize;
 	while(bytesWritten < readFileSize){
-		if(bytesLeft < bufSize){//special case when bytes left to be written is less than buffer size. Must adjust number of bytes to be read from file to prefvent reading invalid data
+		if(bytesLeft < bufSize){//special case when bytes left to be written is less than buffer size. Must adjust number of bytes to be read from file to prevent reading invalid data
 			readn(readFd, buf, bytesLeft);
 			writen(writeFd, buf, bytesLeft);
 			bytesWritten += bytesLeft;
@@ -87,8 +87,10 @@ int fileWrite(int readFd, int writeFd, int readFileSize, size_t bufSize){
 			bytesWritten += writen(writeFd, buf, bufSize);
 			bytesLeft -= bufSize;
 		}
-	}
 
+		printf("Received %d bytes out of %d total \r", bytesWritten, readFileSize);
+	}
+	printf("\nDownload complete.\n");
 	free(buf);
 
 	return 0;

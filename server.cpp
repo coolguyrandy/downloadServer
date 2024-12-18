@@ -150,7 +150,7 @@ int main(){
 	printf("Client connected\n");
 
 
-	sendFile(connectSocket, "testFile");
+	sendFile(connectSocket, "testfile.txt");
 	
 	
 	close(connectSocket);
