@@ -52,19 +52,26 @@ int main(){
 	}
 	printf("Server listening on port 8000\n");
 
-	//Accept a connection
-	if( (connectSocket = accept(listenSocket, (struct sockaddr *)&client_address, &client_len)) < 0){
-		perror("Accept failed");
-		close(listenSocket);
-		exit(EXIT_FAILURE);
+	while(true){
+
+		//Accept a connection
+		if( (connectSocket = accept(listenSocket, (struct sockaddr *)&client_address, &client_len)) < 0){
+			perror("Accept failed");
+			close(listenSocket);
+			exit(EXIT_FAILURE);
+		}
+		printf("Client connected\n");
+		
+		if(fork() == 0){
+			close(listenSocket);
+			sendFile(connectSocket, "testfile.txt");
+			close(connectSocket);
+			exit(0);
+		}
+
+		close(connectSocket);
+
 	}
-	printf("Client connected\n");
-
-
-	sendFile(connectSocket, "testfile.txt");
-	
-	
-	close(connectSocket);
 	close(listenSocket);
 
 	return 0;
