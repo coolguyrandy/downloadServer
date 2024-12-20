@@ -16,7 +16,7 @@
 
 
 
-int main(int argc, char*argv[]){
+int main(int argc, char *argv[]){
 	char *ip = argv[1];
 	int port = atoi(argv[2]);
 	int socketClient;

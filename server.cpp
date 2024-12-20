@@ -14,7 +14,10 @@
 #include<cstring>
 #include"serverHeader.h"
 
-int main(){
+int main(int argc, char *argv[]){
+
+	char *file = argv[1];
+	int port = atoi(argv[2]);
 
 	int listenSocket, connectSocket;
 	struct sockaddr_in server_address, client_address;
@@ -31,7 +34,7 @@ int main(){
 	//Configuring server address
 	server_address.sin_family = PF_INET;//IPV4
 	server_address.sin_addr.s_addr = INADDR_ANY;
-	server_address.sin_port = htons(8000);
+	server_address.sin_port = htons(port);
 
 	int opt = 1;
 	if( setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0){
@@ -50,8 +53,9 @@ int main(){
 		close(listenSocket);
 		exit(EXIT_FAILURE);
 	}
-	printf("Server listening on port 8000\n");
+	printf("Server hosting file %s on port %d. \n", file, port);
 
+	int downloads = 0;
 	while(true){
 
 		//Accept a connection
@@ -60,12 +64,14 @@ int main(){
 			close(listenSocket);
 			exit(EXIT_FAILURE);
 		}
-		printf("Client connected\n");
-		
+		downloads+=1;
+		printf("Client connected.\nDownload count: %d \n \r", downloads);
+
 		if(fork() == 0){
 			close(listenSocket);
-			sendFile(connectSocket, "testfile.txt");
+			sendFile(connectSocket, file);
 			close(connectSocket);
+			printf("Client exited.\n");
 			exit(0);
 		}
 
