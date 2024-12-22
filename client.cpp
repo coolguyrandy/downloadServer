@@ -17,8 +17,15 @@
 
 
 int main(int argc, char *argv[]){
+	
+	if(argc != 4){
+		printf("Incorrect number of arguments passed. Expected 3.\nUsage: ./cient <server ip> <port> <desired FileName>\n");
+		return 0;
+	}	
+	
 	char *ip = argv[1];
 	int port = atoi(argv[2]);
+	char *fileName = argv[3];
 	int socketClient;
 	struct sockaddr_in addr;
 	socklen_t addr_size;
@@ -42,7 +49,7 @@ int main(int argc, char *argv[]){
 	printf("Connected to the server\n");
 
 	
-	int fileFd = open("testReceipt", O_RDWR | O_CREAT, 0700);
+	int fileFd = open(fileName, O_RDWR | O_CREAT, 0644);
 
 	//Receive file
 	recvFile(socketClient, fileFd);
