@@ -13,10 +13,35 @@
 #include<iostream>
 #include<cstring>
 #include"serverHeader.h"
+#include<signal.h>
+
+
+volatile int serverStop = 0;
+
+void interruptHandler(int sig){
+
+	serverStop +=1;
+}
 
 int main(int argc, char *argv[]){
 
+
+	if(argc != 3){
+		printf("Incorrect number of arguments passed. Expected 2. \nUsage: ./server <filename> <desired port>\n");
+		return 0;
+	}
+
+	
+
+	signal(SIGINT, interruptHandler);
+
 	char *file = argv[1];
+	
+	if(!fileExists(file)){
+		printf("File %s does not exist. Server exiting\n", file);
+		return 0;
+	}
+
 	int port = atoi(argv[2]);
 
 	int listenSocket, connectSocket;
@@ -56,25 +81,64 @@ int main(int argc, char *argv[]){
 	printf("Server hosting file %s on port %d. \n", file, port);
 
 	int downloads = 0;
-	while(true){
+	while(!serverStop){
+		
+		fd_set readfds;
+		FD_ZERO(&readfds);
+		FD_SET(listenSocket, &readfds);
 
-		//Accept a connection
-		if( (connectSocket = accept(listenSocket, (struct sockaddr *)&client_address, &client_len)) < 0){
-			perror("Accept failed");
-			close(listenSocket);
-			exit(EXIT_FAILURE);
+		struct timespec timeout;
+		timeout.tv_sec = 5;
+		timeout.tv_nsec = 0;
+
+		sigset_t mask, oldmask;
+		sigemptyset(&mask);
+		sigaddset(&mask, SIGINT);
+
+		sigprocmask(SIG_BLOCK, &mask, &oldmask);
+
+		int ready = pselect(listenSocket+1, &readfds, NULL, NULL, &timeout, &oldmask);
+
+		sigprocmask(SIG_SETMASK, &oldmask, NULL);
+
+
+		if(ready < 0){
+			if(errno == EINTR){
+				printf("\npselect interrupted by singal. Server stopping now. \n");
+				break;
+			}
+			else{
+				perror("peselect");
+				break;
+			}
+		
 		}
-		downloads+=1;
-		printf("Client connected.\nDownload count: %d \n \r", downloads);
-
-		if(fork() == 0){
-			close(listenSocket);
-			sendFile(connectSocket, file);
-			close(connectSocket);
-			printf("Client exited.\n");
-			exit(0);
+		else if(ready == 0){
+			printf("TIme out expired.\n");
 		}
+		else{
 
+			//Accept a connection
+			if( ( (connectSocket = accept(listenSocket, (struct sockaddr *)&client_address, &client_len)) < 0) or (serverStop == 1)){
+				if(serverStop == 1)
+					break;
+				perror("Accept failed");
+				close(listenSocket);
+				exit(EXIT_FAILURE);
+			}
+			downloads+=1;
+			printf("Client connected.\nDownload count: %d \n \r", downloads);
+
+		
+			if(fork() == 0){
+				close(listenSocket);
+				sendFile(connectSocket, file);
+				close(connectSocket);
+				printf("Client exited.\n");
+				exit(0);
+			}
+
+		}
 		close(connectSocket);
 
 	}
