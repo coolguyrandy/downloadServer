@@ -1,0 +1,8 @@
+This program is an extremely simple implementation of a server-client file transfer program. The server is process based, meaning that for each new client connection the server receives, it forks a child to handle the file transfer to the client. Once the file download is complete, the client immediately exits. The server currently only supports hosting one file at a time. In order to exit the server, send the interrupt (SIGINT) signal by pressing Ctrl+C.
+
+Server usage: ./server <File to host> <Port to host>
+NOTE: To close server, send interrupt signal (Ctrl+C) 
+
+
+Client usage: ./client <Server IP> <Port> <Desired filename> 
+NOTE: Client will close immediately after the file download is complete. 
